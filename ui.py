@@ -1,3 +1,3 @@
 import streamlit as st
 
-st.markdown(""" Drug & Smile """)
+st.markdown(""" 💊 Drug & Smile 💊 """)
