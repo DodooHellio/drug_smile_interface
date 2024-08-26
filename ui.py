@@ -18,18 +18,13 @@ with st.form("my_form"):
         #st.write("model selected ➤", model)
         #st.write("uploaded_file", uploaded_file)
 
-        response_model = requests.post("http://127.0.0.1:8080/model", json={"selected_model":model})
-        if response_model.status_code == 200:
-            st.write("model selected ➤" , response_model.json()["model"])
-        else:
-            st.write("Error submission model")
 
         if uploaded_file is not None:
             files = {'file':uploaded_file.getvalue()}
-
-            response_parquet = requests.post("http://127.0.0.1:8080/predict", files=files)
-            if response_model.status_code == 200:
-                st.write(response_parquet.json())
+            params = {"model_name" : model}
+            response_parquet = requests.post(f"http://127.0.0.1:8080/loaddata", json=params,files=files)
+            if response_parquet.status_code == 200:
+                st.write(response_parquet.json()["message"])
             else:
                 st.write("Error submission parquet file")
 
