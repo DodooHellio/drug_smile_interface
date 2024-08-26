@@ -18,7 +18,7 @@ with st.form("my_form"):
             files = {'file':uploaded_file.getvalue()}
             response_parquet = requests.post(f"http://127.0.0.1:8080/loaddata", data=params,files=files)
             if response_parquet.status_code == 200:
-                st.write(response_parquet.json()["message"])
+                st.write(response_parquet.json())
             else:
                 st.write("Error submission parquet file")
 
