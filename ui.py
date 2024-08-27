@@ -16,7 +16,7 @@ with st.form("my_form"):
         params = {"model_name" : model}
         if uploaded_file is not None:
             files = {'file':uploaded_file.getvalue()}
-            response_parquet = requests.post(f"http://127.0.0.1:8080/loaddata", data=params,files=files)
+            response_parquet = requests.post(f"http://127.0.0.1:8010/predict", data=params,files=files)
             if response_parquet.status_code == 200:
                 st.write(response_parquet.json())
             else:
