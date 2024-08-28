@@ -36,28 +36,69 @@ req = ""
 
 with st.form("my_form"):
     st.write("Test your molecules")
-    model = st.radio('Select a model', ('Random Forest', 'GNN', 'Logistic Regression'))
+    selection = st.radio('Select a model', ('Raw Features', 'Binary Vectors', 'Graphs'))
     uploaded_file = st.file_uploader("Choose a Parquet file", type=["parquet"])
-    submitted = st.form_submit_button("Submit")
 
-    if submitted:
+    col1, col2 = st.columns(2)
 
-        params = {"model_name" : model}
-        if uploaded_file is not None:
-            st.balloons()
+    with col1:
+        submitted = st.form_submit_button(label="Submit")
 
-            files = {'file':uploaded_file.getvalue()}
-            response_parquet = requests.post(f"http://127.0.0.1:8010/predict", data=params,files=files)
-            if response_parquet.status_code == 200:
-                st.write(response_parquet.json())
-            else:
-                st.write("Error submission parquet file")
-        else :
-            st.warning("*parquet file missing*")
+    with col2:
+        predict_button = st.form_submit_button(label='Predict')
+
+
+    # if submitted:
+    #     if selection == "Raw Features":
+    #         model = "Support Vector Machine"
+    #     elif selection == "Binary Vectors":
+    #         model = "Logistic Regression"
+    #     elif selection == "Graphs":
+    #         model = "GNN"
+
+    #     params = {"model_name" : model}
+    #     if uploaded_file is not None:
+
+
+    #         files = {'file':uploaded_file.getvalue()}
+    #         response_parquet = requests.post(f"http://127.0.0.1:8010/predict", data=params,files=files)
+    #         if response_parquet.status_code == 200:
+    #             result_predict =pd.read_json(response_parquet.json())
+    #         else:
+    #             st.write("Error submission parquet file")
+    #     else :
+    #         st.warning("*parquet file missing*")
 
 
 if submitted:
     if uploaded_file is not None:
-        st.write("Molecules to test : ")
         df = pd.read_parquet(uploaded_file)
-        st.dataframe(df)
+
+        st.write(f"You uploaded {df.shape[0]} **molecules** to test : ")
+        st.dataframe(df["molecule_smiles"])
+
+
+if predict_button:
+    if uploaded_file is not None:
+        st.balloons()
+
+        if selection == "Raw Features":
+            model = "Support Vector Machine"
+        elif selection == "Binary Vectors":
+            model = "Logistic Regression"
+        elif selection == "Graphs":
+            model = "GNN"
+
+        params = {"model_name" : model}
+        if uploaded_file is not None:
+
+            files = {'file':uploaded_file.getvalue()}
+            response_parquet = requests.post(f"http://127.0.0.1:8010/predict", data=params,files=files)
+            if response_parquet.status_code == 200:
+                result_predict =pd.read_json(response_parquet.json())
+                st.write("*Prediction : *")
+                st.write(result_predict[["molecule_smiles", "BRD4", "HSA", "sEH"]])
+            else:
+                st.write("Error submission parquet file")
+        else :
+            st.warning("*parquet file missing*")
