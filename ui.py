@@ -3,8 +3,12 @@ import requests
 import pandas as pd
 from PIL import Image
 import base64
+from rdkit import Chem
+from rdkit.Chem import Draw
 
-
+def from_smile_to_viz(mol):
+    img = Draw.MolToImage(mol)
+    return img
 
 
 st.title(""" 💊 Drug & Smile 💊 """)
@@ -47,35 +51,15 @@ with st.form("my_form"):
     with col2:
         predict_button = st.form_submit_button(label='Predict')
 
-
-    # if submitted:
-    #     if selection == "Raw Features":
-    #         model = "Support Vector Machine"
-    #     elif selection == "Binary Vectors":
-    #         model = "Logistic Regression"
-    #     elif selection == "Graphs":
-    #         model = "GNN"
-
-    #     params = {"model_name" : model}
-    #     if uploaded_file is not None:
-
-
-    #         files = {'file':uploaded_file.getvalue()}
-    #         response_parquet = requests.post(f"http://127.0.0.1:8010/predict", data=params,files=files)
-    #         if response_parquet.status_code == 200:
-    #             result_predict =pd.read_json(response_parquet.json())
-    #         else:
-    #             st.write("Error submission parquet file")
-    #     else :
-    #         st.warning("*parquet file missing*")
-
-
 if submitted:
     if uploaded_file is not None:
         df = pd.read_parquet(uploaded_file)
 
         st.write(f"You uploaded {df.shape[0]} **molecules** to test : ")
         st.dataframe(df["molecule_smiles"])
+    else :
+        st.warning("*parquet file missing*")
+
 
 
 if predict_button:
@@ -96,9 +80,41 @@ if predict_button:
             response_parquet = requests.post(f"http://127.0.0.1:8010/predict", data=params,files=files)
             if response_parquet.status_code == 200:
                 result_predict =pd.read_json(response_parquet.json())
-                st.write("*Prediction : *")
+                result_predict['BRD4'] = [1, 0, 0, 0, 0]
+                result_predict['HSA'] = [0, 1, 0, 0, 0]
+                result_predict['sEH'] = [0, 0, 1, 0, 0]
+
+                st.write("**Prediction** : ")
                 st.write(result_predict[["molecule_smiles", "BRD4", "HSA", "sEH"]])
+
+                for _ in range(10):
+                    st.text("")
+
+                st.write("**Summary** : ")
+
+                col3, col4 = st.columns([1, 2])
+
+                result_predict['molecule_image'] = result_predict['molecule_smiles'].apply(lambda x: from_smile_to_viz(Chem.MolFromSmiles(x)))
+
+                #df = result_predict[['id', 'molecule_smiles', 'molecule_image', 'protein_name', 'binds']]
+                df = result_predict
+                for i, row in df.iterrows():
+                    col3, col4 = st.columns(2)
+
+                    with col3:
+                        st.image(row['molecule_image'], caption=df.iloc[i]['molecule_smiles'], width=200)
+
+                    with col4:
+                        if df.iloc[i]['BRD4']+df.iloc[i]['HSA']+df.iloc[i]['sEH'] == 0:
+                            st.write(f"Ne sert à rien")
+                        else :
+                            st.write(f"Binds to the protein: {row['protein_name']}")
+
+                    st.write("---")
+
+
+
             else:
                 st.write("Error submission parquet file")
-        else :
-            st.warning("*parquet file missing*")
+    else :
+        st.warning("*parquet file missing*")
