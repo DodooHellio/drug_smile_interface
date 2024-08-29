@@ -54,6 +54,7 @@ with st.form("my_form"):
 if submitted:
     if uploaded_file is not None:
         df = pd.read_parquet(uploaded_file)
+        df.index = range(1,6)
 
         st.write(f"You uploaded {df.shape[0]} **molecules** to test : ")
         st.dataframe(df["molecule_smiles"])
@@ -84,35 +85,64 @@ if predict_button:
                 result_predict['HSA'] = [0, 1, 0, 0, 0]
                 result_predict['sEH'] = [0, 0, 1, 0, 0]
 
+                result_predict.index = range(1,6)
+
                 st.write("**Prediction** : ")
                 st.write(result_predict[["molecule_smiles", "BRD4", "HSA", "sEH"]])
 
-                for _ in range(10):
+                for _ in range(2):
                     st.text("")
-
-                st.write("**Summary** : ")
 
                 col3, col4 = st.columns([1, 2])
 
                 result_predict['molecule_image'] = result_predict['molecule_smiles'].apply(lambda x: from_smile_to_viz(Chem.MolFromSmiles(x)))
-
-                #df = result_predict[['id', 'molecule_smiles', 'molecule_image', 'protein_name', 'binds']]
                 df = result_predict
+
+                # Création du tableau
+                col3, col4 , col5= st.columns(3)
+                # Titres des colonnes
+                with col3:
+                    st.markdown("<p style='text-align: center; font-size:17px; font-weight: bold;'>Molecule ID</p>", unsafe_allow_html=True)
+
+                with col4:
+                    st.markdown("<p style='text-align: center; font-size:17px;font-weight: bold;'>Graphic representation</p>", unsafe_allow_html=True)
+
+                with col5:
+                    st.markdown("<p style='text-align: center; font-size:17px;font-weight: bold;'>Result</p>", unsafe_allow_html=True)
+
+                st.markdown("<hr style='margin: 0; padding: 0;'>", unsafe_allow_html=True)
+
                 for i, row in df.iterrows():
-                    col3, col4 = st.columns(2)
+                    col3, col4 , col5= st.columns(3)
+
 
                     with col3:
-                        st.image(row['molecule_image'], caption=df.iloc[i]['molecule_smiles'], width=200)
+                        for _ in range(5):
+                            st.text("")
+                        # st.write(f'Molecule n°{i}')
+                        st.markdown(f"<div style='display: flex; justify-content: center; align-items: center; height: 100%;'><p>Molecule n°{i}</p></div>", unsafe_allow_html=True)
 
                     with col4:
-                        if df.iloc[i]['BRD4']+df.iloc[i]['HSA']+df.iloc[i]['sEH'] == 0:
-                            st.write(f"Ne sert à rien")
+                        st.image(row['molecule_image'], width=200)
+
+                    with col5:
+                        for _ in range(5):
+                            st.text("")
+                        if df.iloc[i-1]['BRD4']+df.iloc[i-1]['HSA']+df.iloc[i-1]['sEH'] == 0:
+                            st.write(f"Molecule n°{i} can't be used")
                         else :
-                            st.write(f"Binds to the protein: {row['protein_name']}")
+                            if df.iloc[i-1]['BRD4'] == 1:
+                                st.write(f"Molecule n°{i} could play a role in:")
+                                st.markdown("<p style='text-align: center; font-size:17px;font-weight: bold;'>reducing cancer progression</p>", unsafe_allow_html=True)
+                            elif df.iloc[i-1]['HSA'] == 1:
+                                st.markdown(f"<p style='text-align: center; font-size:17px;font-weight: bold;'>Molecule n°{i} may be:</p>", unsafe_allow_html=True)
+                                st.markdown("<p style='text-align: center; font-size:17px;font-weight: bold;'>absorbed by the blood</p>", unsafe_allow_html=True)
+                            elif df.iloc[i-1]['sEH'] == 1:
+                                st.write(f"Molecule n°{i} could play a role in:")
+                                st.markdown("<p style='text-align: center; font-size:17px;font-weight: bold;'>reducing diabetes progression</p>", unsafe_allow_html=True)
 
-                    st.write("---")
 
-
+                    st.markdown("<hr style='margin: 0; padding: 0;'>", unsafe_allow_html=True)
 
             else:
                 st.write("Error submission parquet file")
