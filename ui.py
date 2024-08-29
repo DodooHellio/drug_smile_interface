@@ -74,7 +74,7 @@ if predict_button:
         st.balloons()
 
         if selection == "Raw Features":
-            model = "Support Vector Machine"
+            model = "Logistic Regression"
         elif selection == "Binary Vectors":
             model = "Logistic Regression"
         elif selection == "Graphs":
