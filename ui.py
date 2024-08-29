@@ -3,16 +3,22 @@ import requests
 import pandas as pd
 from PIL import Image
 import base64
-from rdkit import Chem
-from rdkit.Chem import Draw
+import json
+from io import BytesIO
+# from rdkit import Chem
+# from rdkit.Chem import Draw
 
-def from_smile_to_viz(mol):
-    img = Draw.MolToImage(mol)
-    return img
+# def from_smile_to_viz(mol):
+#     img = Draw.MolToImage(mol)
+#     return img
 
 
 st.title(""" 💊 Drug & Smile 💊 """)
 
+def base64_to_pil(img_base64):
+    img_data = base64.b64decode(img_base64)
+    img = Image.open(BytesIO(img_data))
+    return img
 
 with open('images/wagon.png', "rb") as image_file:
     encoded_image = base64.b64encode(image_file.read()).decode()
@@ -81,6 +87,7 @@ if predict_button:
             response_parquet = requests.post(f"http://127.0.0.1:8010/predict", data=params,files=files)
             if response_parquet.status_code == 200:
                 result_predict =pd.read_json(response_parquet.json())
+                result_predict['molecule_image'] = result_predict['molecule_image'].apply(base64_to_pil)
                 result_predict['BRD4'] = [1, 0, 0, 0, 0]
                 result_predict['HSA'] = [0, 1, 0, 0, 0]
                 result_predict['sEH'] = [0, 0, 1, 0, 0]
@@ -95,7 +102,7 @@ if predict_button:
 
                 col3, col4 = st.columns([1, 2])
 
-                result_predict['molecule_image'] = result_predict['molecule_smiles'].apply(lambda x: from_smile_to_viz(Chem.MolFromSmiles(x)))
+                # result_predict['molecule_image'] = result_predict['molecule_smiles'].apply(lambda x: from_smile_to_viz(Chem.MolFromSmiles(x)))
                 df = result_predict
 
                 # Création du tableau
