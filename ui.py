@@ -84,7 +84,7 @@ if predict_button:
         if uploaded_file is not None:
 
             files = {'file':uploaded_file.getvalue()}
-            response_parquet = requests.post(f"http://127.0.0.1:8010/predict", data=params,files=files)
+            response_parquet = requests.post(f"https://drugsmile5-42drols5sa-ew.a.run.app/predict", data=params,files=files)
             if response_parquet.status_code == 200:
                 result_predict =pd.read_json(response_parquet.json())
                 result_predict['molecule_image'] = result_predict['molecule_image'].apply(base64_to_pil)
